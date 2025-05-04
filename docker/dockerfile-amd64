@@ -1,0 +1,50 @@
+FROM nvcr.io/nvidia/tensorrt:24.10-py3
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update && apt-get upgrade -y \
+    && apt-get install -y \
+    python3 \
+    python3-pip \
+    git
+
+WORKDIR /workspace
+
+ENV CUDNN_DIR=/usr/local/cuda
+ENV LD_LIBRARY_PATH=$CUDNN_DIR/lib64:$LD_LIBRARY_PATH
+
+RUN apt-get install libgtk* libspdlog-dev libfmt-dev libboost-dev -y
+
+WORKDIR /workspace
+RUN git clone https://github.com/opencv/opencv.git && git clone https://github.com/opencv/opencv_contrib.git && cd opencv && mkdir build
+WORKDIR /workspace/opencv/build
+RUN cmake -D CMAKE_BUILD_TYPE=RELEASE \
+    -D CMAKE_INSTALL_PREFIX=/usr/local \
+    -D WITH_CUDA=ON \
+    -D ENABLE_FAST_MATH=1 \
+    -D CUDA_FAST_MATH=1 \
+    -D WITH_CUBLAS=1 \
+    -D OPENCV_EXTRA_MODULES_PATH=/workspace/opencv_contrib/modules ..
+RUN make -j$(nproc) && make install
+
+RUN apt-get update && apt-get upgrade -y
+RUN pip3 install torch torchvision --upgrade --force-reinstall
+RUN pip3 install ultralytics onnxslim onnxruntime-gpu onnxruntime-gpu matplotlib tqdm requests psutil cmake
+RUN pip3 install "numpy<2"
+
+WORKDIR /workspace
+#install ros-humble
+RUN apt-get update && apt-get install -y curl gnupg2 lsb-release
+RUN curl -s https://raw.githubusercontent.com/ros/rosdistro/master/ros.asc | gpg --dearmor > /usr/share/keyrings/ros-archive-keyring.gpg
+RUN echo "deb [signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] http://packages.ros.org/ros2/ubuntu $(lsb_release -sc) main" | tee /etc/apt/sources.list.d/ros2.list > /dev/null
+RUN apt-get update && apt-get install -y ros-humble-desktop
+RUN apt-get install -y python3-colcon-common-extensions python3-rosdep python3-rosinstall python3-vcstool
+RUN rosdep init
+RUN rosdep update
+
+RUN apt-get install  libpcap-dev -y 
+RUN apt-get install -y libyaml-cpp-dev
+RUN apt-get update && apt-get upgrade -y
+
+RUN /bin/bash -c "source /opt/ros/humble/setup.bash"
+RUN echo "source /opt/ros/humble/setup.bash" >> /root/.bashrc
