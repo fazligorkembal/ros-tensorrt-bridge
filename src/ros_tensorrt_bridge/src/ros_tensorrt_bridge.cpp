@@ -12,6 +12,7 @@ RosTensorRTBridge::RosTensorRTBridge(std::string model_path, ConvertType convert
     assert(task_type == TaskType::Detection && "TaskType must be Detection. Classification, Segmentation, Pose_estimation, and Obb are not supported yet.");
     assert(input_type == InputType::Image && "InputType must be Image. Video, Camera, and File are not supported yet.");   
     
+    
 }
 
 RosTensorRTBridge::~RosTensorRTBridge()
