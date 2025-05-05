@@ -1,6 +1,7 @@
 #pragma once
 #include <iostream>
 #include "ros_tensorrt_bridge/utils.hpp"
+#include "ros_tensorrt_bridge/kernels/deviceInfo.hpp"
 
 class RosTensorRTBridge
 {

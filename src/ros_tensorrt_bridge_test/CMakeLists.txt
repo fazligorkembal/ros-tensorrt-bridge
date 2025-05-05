@@ -25,15 +25,6 @@ if(NOT WIN32)
 endif()
 
 # -------------------- Enable Cuda --------------------
-include(CheckLanguage)
-check_language(CUDA)
-if(CMAKE_CUDA_COMPILER)
-  #colored messages
-  message("${BoldGreen}CUDA is enabled${ColourReset}")
-endif()
-
-
-
 
 
 # find dependencies
