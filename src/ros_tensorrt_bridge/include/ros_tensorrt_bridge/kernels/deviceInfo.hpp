@@ -4,6 +4,6 @@
 #include <cuda_runtime.h>
 #include <stdio.h>
 
-void deviceInfoo();
+void deviceInfo();
 
 #endif // ROS_TENSORRT_BRIDGE__DEVICE_INFO_HPP

@@ -6,6 +6,10 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
 
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
 if(NOT WIN32)
   string(ASCII 27 Esc)
   set(ColourReset "${Esc}[m")
@@ -60,16 +64,10 @@ include_directories(include)
 
 set(library_name ${PROJECT_NAME}_core)
 
-add_library(${library_name} SHARED src/ros_tensorrt_bridge.cpp src/kernels/deviceInfo.cpp)
+add_library(${library_name} SHARED src/tensorrt_bridge.cpp src/kernels/deviceInfo.cpp)
 target_link_libraries(${library_name} CUDA::cudart)
+target_link_libraries(${library_name} nvinfer)
 
-add_executable(main src/main.cpp)
-target_link_libraries(main ${library_name})
-
-install(
-  TARGETS main
-  DESTINATION lib/${PROJECT_NAME}
-)
 
 # For adding the header files
 install(DIRECTORY include/
