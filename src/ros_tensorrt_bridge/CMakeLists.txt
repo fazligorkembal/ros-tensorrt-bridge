@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.22)
-project(ros_tensorrt_bridge CXX CUDA)
-cmake_policy(SET CMP0146 NEW)
+project(ros_tensorrt_bridge)
+#project(ros_tensorrt_bridge CXX CUDA)
+#cmake_policy(SET CMP0146 NEW)
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
@@ -53,6 +54,7 @@ endif()
 # find_package(<dependency> REQUIRED)
 find_package(ament_cmake REQUIRED)
 find_package(CUDAToolkit REQUIRED)
+find_package(OpenCV REQUIRED)
 # ----------------------- Dependencies -----------------------
 
 include_directories(include)
@@ -64,9 +66,10 @@ include_directories(include)
 
 set(library_name ${PROJECT_NAME}_core)
 
-add_library(${library_name} SHARED src/tensorrt_bridge.cpp src/kernels/deviceInfo.cpp)
+add_library(${library_name} SHARED src/tensorrt_bridge.cpp src/kernels/deviceInfo.cpp src/yolo_scratch/model_generator.cpp src/yolo_scratch/model.cpp src/yolo_scratch/block.cpp src/yolo_scratch/plugin/yololayer.cu)
 target_link_libraries(${library_name} CUDA::cudart)
 target_link_libraries(${library_name} nvinfer)
+target_link_libraries(${library_name} ${OpenCV_LIBS})
 
 
 # For adding the header files

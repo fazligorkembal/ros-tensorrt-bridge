@@ -59,7 +59,7 @@ enum class InputType
     VideoStream
 };
 
-class TensorRTBridgOptions
+class TensorRTBridgeOptions
 {
 public:
     std::string model_path = "";
@@ -69,7 +69,7 @@ public:
     OptimizationType optimization_type = OptimizationType::None;
     InputType input_type = InputType::None;
 
-    TensorRTBridgOptions(std::string model_path,
+    TensorRTBridgeOptions(std::string model_path,
                          ModelType model_type,
                          ConversionType conversion_type,
                          TaskType task_type,
@@ -84,10 +84,5 @@ public:
     {
     }
 };
-
-bool isFileExist(const std::string &filePath)
-{
-    return std::filesystem::exists(filePath);
-}
 
 // todo: Add output type enum

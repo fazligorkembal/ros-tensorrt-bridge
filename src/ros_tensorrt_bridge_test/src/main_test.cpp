@@ -4,12 +4,12 @@ int main(int argc, char **argv)
 {
     // Create an instance of RosTensorRTBridge
 
-    TensorRTBridgOptions options(
+    TensorRTBridgeOptions options(
         "/home/user/Documents/ros_tensorrt_bridge/install/yolo11n-pose.wts",
         ModelType::Yolo11n,
         ConversionType::Scratch,
         TaskType::Pose,
-        OptimizationType::FP32,
+        OptimizationType::FP16,
         InputType::Image);
     TensorRTBridge tensorrt_bridge(options);
     // Test the constructor and destructor

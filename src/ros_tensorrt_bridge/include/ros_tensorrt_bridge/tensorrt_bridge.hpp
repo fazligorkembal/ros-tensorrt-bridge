@@ -3,11 +3,11 @@
 
 #include "ros_tensorrt_bridge/utils.hpp"
 #include "ros_tensorrt_bridge/kernels/deviceInfo.hpp"
-//#include "ros_tensorrt_bridge/model_generator_automatic.hpp"
+#include "ros_tensorrt_bridge/yolo_scratch/model_generator.hpp"
 
 class TensorRTBridge
 {
 public:
-    TensorRTBridge(TensorRTBridgOptions options);
+    TensorRTBridge(TensorRTBridgeOptions options);
     ~TensorRTBridge();
 };
