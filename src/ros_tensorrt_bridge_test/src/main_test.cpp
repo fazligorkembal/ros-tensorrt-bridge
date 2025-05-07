@@ -5,7 +5,7 @@ int main(int argc, char **argv)
     // Create an instance of RosTensorRTBridge
 
     TensorRTBridgeOptions options(
-        "/home/user/Documents/ros_tensorrt_bridge/install/yolo11n-pose.wts",
+        "/home/user/Documents/ros_tensorrt_bridge/install/yolo11n-pose.engine",
         ModelType::Yolo11n,
         ConversionType::Scratch,
         TaskType::Pose,

@@ -1,23 +1,22 @@
 #include "ros_tensorrt_bridge/yolo_scratch/model_generator.hpp"
 
 Logger gLogger;
-using namespace nvinfer1;
 
 namespace yolo_scratch
 {
     BuildModel::BuildModel(const TensorRTBridgeOptions &options) : mOptions(options)
     {
 
+        std::string engine_path = mOptions.model_path;
         if (mOptions.model_path.ends_with(".wts"))
         {
-            std::string engine_path = mOptions.model_path;
             engine_path.replace(engine_path.end() - 4, engine_path.end(), ".engine");
             serialize_engine(engine_path);
         }
-        else if (mOptions.model_path.ends_with(".engine") || mOptions.model_path.ends_with(".plan"))
-        {
-            ASSERT(false, "Engine file is not supported yet");
-        }
+
+        IRuntime *runtime = nullptr;
+        ICudaEngine *engine = nullptr;
+        deserialize_engine(engine_path, &runtime, &engine);
     }
 
     void BuildModel::serialize_engine(std::string &engine_path)
@@ -120,8 +119,29 @@ namespace yolo_scratch
         }
     }
 
-    void BuildModel::deserialize_engine()
+    void BuildModel::deserialize_engine(std::string &engine_name, IRuntime **runtime, ICudaEngine **engine)
     {
-        std::cout << "deserialize_engine called" << std::endl;
+        std::cout << "Deserializing engine from: " << engine_name << std::endl;
+        std::ifstream file(engine_name, std::ios::binary);
+        if (!file.good())
+        {
+            ASSERT(false, "Failed to open engine file");
+        }
+        size_t size = 0;
+        file.seekg(0, file.end);
+        size = file.tellg();
+        file.seekg(0, file.beg);
+        char *serialized_engine = new char[size];
+        assert(serialized_engine);
+        file.read(serialized_engine, size);
+        file.close();
+
+        *runtime = createInferRuntime(gLogger);
+        assert(*runtime);
+        *engine = (*runtime)->deserializeCudaEngine(serialized_engine, size);
+        assert(*engine);
+        context = (*engine)->createExecutionContext();
+        ASSERT(context, "Failed to create execution context");
+        delete[] serialized_engine;
     }
 }

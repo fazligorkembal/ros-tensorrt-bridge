@@ -8,6 +8,8 @@
 #include "ros_tensorrt_bridge/utils.hpp"
 #include "ros_tensorrt_bridge/yolo_scratch/model.hpp"
 
+using namespace nvinfer1;
+
 namespace yolo_scratch
 {
     class BuildModel
@@ -18,9 +20,13 @@ namespace yolo_scratch
 
         void parse_parameters(std::string &type, float &gd, float &gw, int &max_channels);
         void serialize_engine(std::string &engine_path);
-        void deserialize_engine();
+        void deserialize_engine(std::string &engine_path, IRuntime **runtime, ICudaEngine **engine);
 
     private:
         const TensorRTBridgeOptions &mOptions;
+        IRuntime *runtime = nullptr;
+
+        IExecutionContext *context = nullptr;
+        cudaStream_t stream;
     };
 }
