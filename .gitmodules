@@ -1,0 +1,4 @@
+[submodule "src/ros_tensorrt_bridge/yolo-tensorrt10"]
+	path = src/ros_tensorrt_bridge/yolo-tensorrt10
+	url = git@github.com:fazligorkembal/yolo-tensorrt10.git
+	branch = yolo11

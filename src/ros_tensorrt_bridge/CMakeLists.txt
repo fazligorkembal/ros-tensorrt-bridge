@@ -57,69 +57,13 @@ find_package(CUDAToolkit REQUIRED)
 find_package(OpenCV REQUIRED)
 # ----------------------- Dependencies -----------------------
 
-include_directories(include)
 
-#add_library(kernel_lib src/kernels/deviceInfo.cpp)
-#set_target_properties(kernel_lib PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
-#target_include_directories(kernel_lib PRIVATE ${CUDAToolkit_INCLUDE_DIRS})
-#target_link_libraries(kernel_lib PRIVATE CUDA::cudart)
+add_subdirectory(yolo-tensorrt10)
 
-set(library_name ${PROJECT_NAME}_core)
-
-add_library(${library_name} SHARED src/tensorrt_bridge.cpp src/kernels/deviceInfo.cpp src/yolo_scratch/model_generator.cpp src/yolo_scratch/model.cpp src/yolo_scratch/block.cpp src/yolo_scratch/plugin/yololayer.cu)
-target_link_libraries(${library_name} CUDA::cudart)
-target_link_libraries(${library_name} nvinfer)
-target_link_libraries(${library_name} ${OpenCV_LIBS})
+add_executable(main_test src/main_test.cpp)
+target_link_libraries(main_test yolo11)
 
 
-# For adding the header files
-install(DIRECTORY include/
-  DESTINATION include/
-)
-
-# Load the Library
-install(
-  TARGETS ${library_name}
-  ARCHIVE DESTINATION lib
-  LIBRARY DESTINATION lib
-  RUNTIME DESTINATION bin
-)
-
-
-if(BUILD_TESTING)
-  find_package(ament_lint_auto REQUIRED)
-  # the following line skips the linter which checks for copyrights
-  # comment the line when a copyright and license is added to all source files
-  set(ament_cmake_copyright_FOUND TRUE)
-  # the following line skips cpplint (only works in a git repo)
-  # comment the line when this package is in a git repo and when
-  # a copyright and license is added to all source files
-  set(ament_cmake_cpplint_FOUND TRUE)
-  ament_lint_auto_find_test_dependencies()
-endif()
-
-
-ament_export_include_directories(
-  include
-)
-ament_export_libraries(
-  ${library_name}
-)
-ament_export_dependencies(
-  CUDAToolkit
-)
-
-# ------------------------- Information -------------------------
-if(TARGET CUDA::cudart)
-  message("${GreenBold}CUDA version: ${CUDAToolkit_VERSION}${ColourReset}")
-  message("${Green}Using CUDA compiler: ${CMAKE_CUDA_COMPILER}${ColourReset}")
-  message("${Green}CUDAToolkit include directory: ${CUDAToolkit_INCLUDE_DIRS}${ColourReset}")
-  include_directories(${CUDA_INCLUDE_DIRS})
-  link_directories(${CUDA_LIBRARIES_DIRS})
-else()
-  message("${RedBold}CUDA not found!${ColourReset}")
-endif()
-# ------------------------- Information -------------------------
 
 
 
