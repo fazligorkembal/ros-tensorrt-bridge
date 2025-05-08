@@ -14,11 +14,11 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 if(NOT WIN32)
   string(ASCII 27 Esc)
   set(ColourReset "${Esc}[m")
-  set(Red         "${Esc}[31m")
-  set(Green       "${Esc}[32m")
-  set(Yellow      "${Esc}[33m")
-  set(RedBold    "${Esc}[31;1m")
-  set(GreenBold  "${Esc}[32;1m")
+  set(Red "${Esc}[31m")
+  set(Green "${Esc}[32m")
+  set(Yellow "${Esc}[33m")
+  set(RedBold "${Esc}[31;1m")
+  set(GreenBold "${Esc}[32;1m")
   set(YellowBold "${Esc}[33;1m")
 endif()
 
@@ -56,16 +56,61 @@ find_package(ament_cmake REQUIRED)
 find_package(CUDAToolkit REQUIRED)
 find_package(OpenCV REQUIRED)
 # ----------------------- Dependencies -----------------------
-
-
 add_subdirectory(yolo-tensorrt10)
 
-add_executable(main_test src/main_test.cpp)
-target_link_libraries(main_test yolo11)
+include_directories(include)
 
 
 
+set(library_name ${PROJECT_NAME}_core)
 
+
+add_library(${library_name} src/tensorrt_bridge.cpp src/scratch/model_builder.cpp)
+target_link_libraries(${library_name} PRIVATE yolo11)
+
+
+# For adding the header files
+install(DIRECTORY include/
+  DESTINATION include/
+)
+
+# Load the Library
+install(
+  TARGETS ${library_name} yolo11 myplugins
+  EXPORT export_${PROJECT_NAME}
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib
+  RUNTIME DESTINATION bin
+  INCLUDES DESTINATION include
+)
+
+
+# ------------------------- Information -------------------------
+if(TARGET CUDA::cudart)
+  message("${GreenBold}CUDA version: ${CUDAToolkit_VERSION}${ColourReset}")
+  message("${Green}Using CUDA compiler: ${CMAKE_CUDA_COMPILER}${ColourReset}")
+  message("${Green}CUDAToolkit include directory: ${CUDAToolkit_INCLUDE_DIRS}${ColourReset}")
+  include_directories(${CUDA_INCLUDE_DIRS})
+  link_directories(${CUDA_LIBRARIES_DIRS})
+else()
+  message("${RedBold}CUDA not found!${ColourReset}")
+endif()
+# ------------------------- Information -------------------------
+
+
+ament_export_include_directories(
+  include
+)
+ament_export_libraries(
+  ${library_name}
+)
+ament_export_dependencies(
+  CUDAToolkit
+  OpenCV
+)
+
+
+ament_export_targets(export_${PROJECT_NAME} HAS_LIBRARY_TARGET)
 
 ament_package()
 
