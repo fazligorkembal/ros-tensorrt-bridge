@@ -9,6 +9,7 @@ int main(int argc, char **argv)
         TaskType::Pose,
         OptimizationType::FP16,
         InputType::Image);
+        
     TensorRTBridge tensorrt_bridge(options);
 
     return 0;
