@@ -45,19 +45,23 @@ public:
 
                 serialize_engine(wts_path, engine_path, type, gd, gw, max_channels);
             }
-        }else if (options_.model_path.ends_with(".engine") || options_.model_path.ends_with(".plan"))
+        }
+        else if (options_.model_path.ends_with(".engine") || options_.model_path.ends_with(".plan"))
         {
             engine_path = options_.model_path;
-        }else{
+        }
+        else
+        {
             ASSERT(false, "Model path must be a .wts, .engine or .plan file for scratch conversion");
         }
-        
+
         deserialize_engine(engine_path);
+        prepare_buffer();
     }
 
     ~ModelBuilderScratch() override;
 
-    void infer() override;
+    void infer(std::vector<cv::Mat> images) override;
     void convert() override;
     void build() override;
 
@@ -65,14 +69,19 @@ private:
     void serialize_engine(std::string &wts_name, std::string &engine_path, std::string &type, float &gd, float &gw, int &max_channels);
     void deserialize_engine(std::string &engine_path);
     void parse_options(std::string &type, float &gd, float &gw, int &max_channels);
-    
+    void prepare_buffer();
+
     Logger gLogger;
     const int kOutputSize = kMaxNumOutputBbox * sizeof(Detection) / sizeof(float) + 1;
-
 
     IRuntime *runtime = nullptr;
     IExecutionContext *context = nullptr;
     ICudaEngine *engine = nullptr;
     cudaStream_t stream;
 
+    int batch_size = 0;
+    float *device_buffers[2];
+    float *output_buffer_host = nullptr;
+    float *decode_ptr_host = nullptr;
+    float *decode_ptr_device = nullptr;
 };

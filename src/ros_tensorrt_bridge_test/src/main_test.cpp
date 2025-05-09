@@ -11,6 +11,6 @@ int main(int argc, char **argv)
         InputType::Image);
         
     TensorRTBridge tensorrt_bridge(options);
-
+    
     return 0;
 }

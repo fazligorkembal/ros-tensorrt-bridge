@@ -6,10 +6,12 @@ ModelBuilderScratch::~ModelBuilderScratch()
 {
     std::cout << "ModelBuilderScratch destructor called" << std::endl;
 }
-void ModelBuilderScratch::infer()
+
+void ModelBuilderScratch::infer(std::vector<cv::Mat> images)
 {
-    std::cout << "ModelBuilderScratch infer called" << std::endl;
+    std::cout << "ModelBuilderScratch infer(images) called" << std::endl;
 }
+
 void ModelBuilderScratch::convert()
 {
     std::cout << "ModelBuilderScratch convert called" << std::endl;
@@ -96,7 +98,28 @@ void ModelBuilderScratch::deserialize_engine(std::string &engine_path)
 
     delete[] serialized_engine;
 
+    CUDA_CHECK(cudaStreamCreate(&stream));
+
+    auto out_dims = engine->getTensorShape(kOutputTensorName);
+    batch_size = out_dims.d[0];
+
+    std::cout << "Output dimensions: " << out_dims.d[0] << ", " << out_dims.d[1] << ", " << out_dims.d[2] << ", " << out_dims.d[3] << std::endl;
     std::cout << "Engine deserialized successfully, " << engine_path << std::endl;
+}
+
+void ModelBuilderScratch::prepare_buffer()
+{
+    ASSERT(engine->getNbIOTensors() == 2, "Engine must have 2 IO tensors");
+
+    // Create GPU buffers on device
+    CUDA_CHECK(cudaMalloc((void **)&device_buffers[0], kBatchSize * 3 * kInputH * kInputW * sizeof(float)));
+    CUDA_CHECK(cudaMalloc((void **)&device_buffers[1], kBatchSize * kOutputSize * sizeof(float)));
+
+    context->setTensorAddress(kInputTensorName, (float *)device_buffers[0]);
+    context->setTensorAddress(kOutputTensorName, (float *)device_buffers[1]);
+
+    output_buffer_host = new float[kBatchSize * kOutputSize];
+    // todo: add cuda_post_process here, for now just use cpu post process
 }
 
 void ModelBuilderScratch::parse_options(std::string &type, float &gd, float &gw, int &max_channels)

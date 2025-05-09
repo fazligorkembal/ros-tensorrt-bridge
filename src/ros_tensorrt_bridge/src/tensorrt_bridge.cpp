@@ -13,6 +13,16 @@ TensorRTBridge::TensorRTBridge(TensorRTBridgeOptions options) : options_(options
 
 }
 
+void TensorRTBridge::infer(std::vector<cv::Mat> images)
+{
+    
+}
+
+void TensorRTBridge::infer(cv::Mat image)
+{
+    
+}
+
 TensorRTBridge::~TensorRTBridge()
 {
     std::cout << "TensorRTBridge destructor called" << std::endl;
