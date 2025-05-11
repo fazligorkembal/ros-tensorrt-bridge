@@ -1,7 +1,7 @@
 #include "ros_tensorrt_bridge/tensorrt_bridge.hpp"
 #include "ros_tensorrt_bridge/assert.hpp"
 
-#include "ros_tensorrt_bridge/scratch/model_builder.hpp"
+
 
 
 TensorRTBridge::TensorRTBridge(TensorRTBridgeOptions options) : options_(options)
@@ -20,7 +20,9 @@ void TensorRTBridge::infer(std::vector<cv::Mat> images)
 
 void TensorRTBridge::infer(cv::Mat image)
 {
-    
+    std::vector<cv::Mat> images;
+    images.push_back(image);
+    infer(images);
 }
 
 TensorRTBridge::~TensorRTBridge()

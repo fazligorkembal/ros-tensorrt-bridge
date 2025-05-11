@@ -60,57 +60,33 @@ add_subdirectory(yolo-tensorrt10)
 
 include_directories(include)
 
-
+install(DIRECTORY include/
+  DESTINATION include
+)
 
 set(library_name ${PROJECT_NAME}_core)
 
 
-add_library(${library_name} src/tensorrt_bridge.cpp src/scratch/model_builder.cpp)
-target_link_libraries(${library_name} PRIVATE yolo11)
+add_library(model_builder src/scratch/model_builder.cpp)
+target_link_libraries(model_builder yolo11)
 
+add_library(${library_name} src/tensorrt_bridge.cpp)
+target_link_libraries(${library_name} model_builder)
 
-# For adding the header files
-install(DIRECTORY include/
-  DESTINATION include/
+target_include_directories(${library_name}
+  PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<TARGET_PROPERTY:yolo11,INTERFACE_INCLUDE_DIRECTORIES> # Araya boşluk KONMAYACAK
 )
 
-# Load the Library
 install(
-  TARGETS ${library_name} yolo11 myplugins
-  EXPORT export_${PROJECT_NAME}
-  LIBRARY DESTINATION lib
+  TARGETS ${library_name} yolo11 model_builder myplugins
+  EXPORT ros_tensorrt_bridge # Kütüphaneyi export et
   ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin
-  INCLUDES DESTINATION include
+  INCLUDES DESTINATION include # Header'ları da kur
 )
 
-
-# ------------------------- Information -------------------------
-if(TARGET CUDA::cudart)
-  message("${GreenBold}CUDA version: ${CUDAToolkit_VERSION}${ColourReset}")
-  message("${Green}Using CUDA compiler: ${CMAKE_CUDA_COMPILER}${ColourReset}")
-  message("${Green}CUDAToolkit include directory: ${CUDAToolkit_INCLUDE_DIRS}${ColourReset}")
-  include_directories(${CUDA_INCLUDE_DIRS})
-  link_directories(${CUDA_LIBRARIES_DIRS})
-else()
-  message("${RedBold}CUDA not found!${ColourReset}")
-endif()
-# ------------------------- Information -------------------------
-
-
-ament_export_include_directories(
-  include
-)
-ament_export_libraries(
-  ${library_name}
-)
-ament_export_dependencies(
-  CUDAToolkit
-  OpenCV
-)
-
-
-ament_export_targets(export_${PROJECT_NAME} HAS_LIBRARY_TARGET)
-
+ament_export_targets(ros_tensorrt_bridge HAS_LIBRARY_TARGET)
 ament_package()
-
