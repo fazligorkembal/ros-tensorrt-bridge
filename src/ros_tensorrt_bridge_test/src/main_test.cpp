@@ -11,7 +11,7 @@ int main(int argc, char **argv)
         InputType::Image);
         
     TensorRTBridge tensorrt_bridge(options);
-        
+    /*    
     cv::Mat image = cv::imread("/home/user/Documents/ros_tensorrt_bridge/images/original.jpg");
     cv::resize(image, image, cv::Size(640, 640));
 
@@ -21,7 +21,7 @@ int main(int argc, char **argv)
         std::cerr << "Failed to load image" << std::endl;
         return -1;
     }
-    /*
+    
     auto start = std::chrono::system_clock::now();
     for(int i = 0; i < 15000; ++i)
     {
