@@ -61,7 +61,7 @@ public:
 
     ~ModelBuilderScratch() override;
 
-    void infer(std::vector<cv::Mat> images) override;
+    void infer(std::vector<cv::Mat> &images) override;
     void convert() override;
     void build() override;
 
@@ -75,8 +75,8 @@ private:
     const int kOutputSize = kMaxNumOutputBbox * sizeof(Detection) / sizeof(float) + 1;
 
     IRuntime *runtime = nullptr;
-    IExecutionContext *context = nullptr;
     ICudaEngine *engine = nullptr;
+    IExecutionContext *context = nullptr;
     cudaStream_t stream;
 
     int batch_size = 0;

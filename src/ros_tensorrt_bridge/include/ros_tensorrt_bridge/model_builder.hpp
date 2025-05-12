@@ -22,7 +22,7 @@ public:
     virtual ~ModelBuilder() = default;
 
     virtual void build() = 0;
-    virtual void infer(std::vector<cv::Mat> images) = 0;
+    virtual void infer(std::vector<cv::Mat> &images) = 0;
     virtual void convert() = 0;
 
 protected:

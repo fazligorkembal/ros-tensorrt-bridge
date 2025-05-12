@@ -7,9 +7,17 @@ ModelBuilderScratch::~ModelBuilderScratch()
     std::cout << "ModelBuilderScratch destructor called" << std::endl;
 }
 
-void ModelBuilderScratch::infer(std::vector<cv::Mat> images)
+void ModelBuilderScratch::infer(std::vector<cv::Mat> &images)
 {
-    std::cout << "ModelBuilderScratch infer(images) called" << std::endl;
+    cuda_batch_preprocess(images, device_buffers[0], kInputW, kInputH, stream);
+    
+    context->enqueueV3(stream);
+    
+    //todo: add gpu post process here
+    CUDA_CHECK(cudaMemcpyAsync(output_buffer_host, device_buffers[1], kBatchSize * kOutputSize * sizeof(float), cudaMemcpyDeviceToHost, stream));
+    std::vector<std::vector<Detection>> res_batch;
+    batch_nms(res_batch, output_buffer_host, images.size(), kOutputSize, kConfThresh, kNmsThresh);
+    draw_bbox_keypoints_line(images, res_batch);
 }
 
 void ModelBuilderScratch::convert()
@@ -99,9 +107,11 @@ void ModelBuilderScratch::deserialize_engine(std::string &engine_path)
     delete[] serialized_engine;
 
     CUDA_CHECK(cudaStreamCreate(&stream));
-
+    cuda_preprocess_init(kMaxInputImageSize);
     auto out_dims = engine->getTensorShape(kOutputTensorName);
     batch_size = out_dims.d[0];
+
+    prepare_buffer();
 
     std::cout << "Output dimensions: " << out_dims.d[0] << ", " << out_dims.d[1] << ", " << out_dims.d[2] << ", " << out_dims.d[3] << std::endl;
     std::cout << "Engine deserialized successfully, " << engine_path << std::endl;
