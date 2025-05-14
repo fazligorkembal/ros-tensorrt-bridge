@@ -1,0 +1,1 @@
+/usr/bin/c++ -fPIC -flto -shared  -o pybind_detections.cpython-310-x86_64-linux-gnu.so CMakeFiles/pybind_detections.dir/detections.cpp.o   -L/usr/local/cuda/lib64  -Wl,-rpath,/usr/local/cuda/lib64

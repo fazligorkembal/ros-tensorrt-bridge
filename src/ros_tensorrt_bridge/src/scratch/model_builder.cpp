@@ -7,7 +7,7 @@ ModelBuilderScratch::~ModelBuilderScratch()
     std::cout << "ModelBuilderScratch destructor called" << std::endl;
 }
 
-void ModelBuilderScratch::infer(std::vector<cv::Mat> &images)
+void ModelBuilderScratch::infer(std::vector<cv::Mat> &images, std::vector<std::vector<Detection>> &res_batch)
 {
     cuda_batch_preprocess(images, device_buffers[0], kInputW, kInputH, stream);
     
@@ -15,7 +15,6 @@ void ModelBuilderScratch::infer(std::vector<cv::Mat> &images)
     
     //todo: add gpu post process here
     CUDA_CHECK(cudaMemcpyAsync(output_buffer_host, device_buffers[1], kBatchSize * kOutputSize * sizeof(float), cudaMemcpyDeviceToHost, stream));
-    std::vector<std::vector<Detection>> res_batch;
     batch_nms(res_batch, output_buffer_host, images.size(), kOutputSize, kConfThresh, kNmsThresh);
     draw_bbox_keypoints_line(images, res_batch);
 }

@@ -13,17 +13,35 @@ TensorRTBridge::TensorRTBridge(TensorRTBridgeOptions options) : options_(options
 
 }
 
+void TensorRTBridge::infer(std::vector<cv::Mat> &images, std::vector<std::vector<Detection>> &res_batch)
+{
+    model_builder->infer(images, res_batch);
+}
+
 void TensorRTBridge::infer(std::vector<cv::Mat> &images)
 {
-    model_builder->infer(images);
+    std::vector<std::vector<Detection>> res_batch;
+    model_builder->infer(images, res_batch);
 }
 
 void TensorRTBridge::infer(cv::Mat &image)
 {
     std::vector<cv::Mat> images;
     images.push_back(image);
-    infer(images);
+    std::vector<std::vector<Detection>> res_batch;
+    model_builder->infer(images, res_batch);
 }
+
+void TensorRTBridge::infer(cv::Mat &image, std::vector<Detection> &res)
+{
+    std::vector<cv::Mat> images;
+    images.push_back(image);
+    std::vector<std::vector<Detection>> res_batch;
+    model_builder->infer(images, res_batch);
+}
+
+
+
 
 TensorRTBridge::~TensorRTBridge()
 {

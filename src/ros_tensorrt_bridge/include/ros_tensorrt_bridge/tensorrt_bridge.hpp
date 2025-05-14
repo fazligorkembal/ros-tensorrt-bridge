@@ -11,8 +11,11 @@ class TensorRTBridge
 public:
     TensorRTBridge(TensorRTBridgeOptions options);
     ~TensorRTBridge();
+    
     void infer(std::vector<cv::Mat> &images);
+    void infer(std::vector<cv::Mat> &images, std::vector<std::vector<Detection>> &res_batch);
     void infer(cv::Mat &image);
+    void infer(cv::Mat &image, std::vector<Detection> &res);
 
 
 private:

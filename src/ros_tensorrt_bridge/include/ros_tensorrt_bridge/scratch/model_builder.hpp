@@ -61,7 +61,7 @@ public:
 
     ~ModelBuilderScratch() override;
 
-    void infer(std::vector<cv::Mat> &images) override;
+    void infer(std::vector<cv::Mat> &images, std::vector<std::vector<Detection>> &res_batch) override;
     void convert() override;
     void build() override;
 

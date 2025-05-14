@@ -11,32 +11,6 @@ int main(int argc, char **argv)
         InputType::Image);
         
     TensorRTBridge tensorrt_bridge(options);
-    /*    
-    cv::Mat image = cv::imread("/home/user/Documents/ros_tensorrt_bridge/images/original.jpg");
-    cv::resize(image, image, cv::Size(640, 640));
-
-
-    if (image.empty())
-    {
-        std::cerr << "Failed to load image" << std::endl;
-        return -1;
-    }
-    
-    auto start = std::chrono::system_clock::now();
-    for(int i = 0; i < 15000; ++i)
-    {
-        tensorrt_bridge.infer(image);
-    }
-    auto end = std::chrono::system_clock::now();
-    std::cout << "Time taken for 15000 inferences: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << " ms" << std::endl;
-    std::cout << "FPS: " << 15000.0 / std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() * 1000 << std::endl;
-    std::cout << "Inference completed" << std::endl;
-
-    cv::imshow("Image", image);
-    cv::waitKey(0);
-    */
-
-
     
     cv::VideoCapture cap(0);
     if (!cap.isOpened())
@@ -45,6 +19,8 @@ int main(int argc, char **argv)
         return -1;
     }
     cv::Mat frame;
+    //std::vector<std::vector<Detection>> res;
+    std::vector<cv::Mat> images;
     while (true)
     {
         cap >> frame;
@@ -54,10 +30,23 @@ int main(int argc, char **argv)
             break;
         }
         cv::resize(frame, frame, cv::Size(640, 640));
-        tensorrt_bridge.infer(frame);
+        if (images.size() > 0)
+        {
+            images[0] = frame;
+            //res[0].clear();
+        }else{
+            images.push_back(frame);
+        }
+
+
+        tensorrt_bridge.infer(images);
+        //std::cout << "Res size: " << res[0].size() << std::endl;
+
+        
         cv::imshow("Camera", frame);
         if (cv::waitKey(1) == 27) // Press 'Esc' to exit
             break;
+        
     }
 
 

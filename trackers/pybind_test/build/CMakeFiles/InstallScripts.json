@@ -1,0 +1,7 @@
+{
+	"InstallScripts" : 
+	[
+		"/home/user/Documents/ros_tensorrt_bridge/trackers/pybind_test/build/cmake_install.cmake"
+	],
+	"Parallel" : false
+}
