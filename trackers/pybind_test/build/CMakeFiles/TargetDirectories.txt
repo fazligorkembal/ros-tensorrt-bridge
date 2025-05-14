@@ -1,4 +1,0 @@
-/home/user/Documents/ros_tensorrt_bridge/trackers/pybind_test/build/CMakeFiles/main.dir
-/home/user/Documents/ros_tensorrt_bridge/trackers/pybind_test/build/CMakeFiles/pybind_detections.dir
-/home/user/Documents/ros_tensorrt_bridge/trackers/pybind_test/build/CMakeFiles/edit_cache.dir
-/home/user/Documents/ros_tensorrt_bridge/trackers/pybind_test/build/CMakeFiles/rebuild_cache.dir
