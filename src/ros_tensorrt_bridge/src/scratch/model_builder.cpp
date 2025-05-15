@@ -16,7 +16,7 @@ void ModelBuilderScratch::infer(std::vector<cv::Mat> &images, std::vector<std::v
     //todo: add gpu post process here
     CUDA_CHECK(cudaMemcpyAsync(output_buffer_host, device_buffers[1], kBatchSize * kOutputSize * sizeof(float), cudaMemcpyDeviceToHost, stream));
     batch_nms(res_batch, output_buffer_host, images.size(), kOutputSize, kConfThresh, kNmsThresh);
-    draw_bbox_keypoints_line(images, res_batch);
+    //draw_bbox_keypoints_line(images, res_batch);
 }
 
 void ModelBuilderScratch::convert()

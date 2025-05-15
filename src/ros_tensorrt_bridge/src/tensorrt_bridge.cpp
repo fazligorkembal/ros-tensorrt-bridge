@@ -15,6 +15,7 @@ TensorRTBridge::TensorRTBridge(TensorRTBridgeOptions options) : options_(options
 
 void TensorRTBridge::infer(std::vector<cv::Mat> &images, std::vector<std::vector<Detection>> &res_batch)
 {
+    res_batch.clear();
     model_builder->infer(images, res_batch);
 }
 

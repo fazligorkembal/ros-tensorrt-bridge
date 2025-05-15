@@ -20,10 +20,17 @@ link_directories(/usr/local/cuda/lib64)
 find_package(ament_cmake REQUIRED)
 find_package(ros_tensorrt_bridge REQUIRED)
 find_package(OpenCV REQUIRED)
+find_package(Python3 COMPONENTS Development REQUIRED)
+find_package(pybind11 REQUIRED)
 
 
 add_executable(main_test src/main_test.cpp)
-ament_target_dependencies(main_test ros_tensorrt_bridge)
+ament_target_dependencies(main_test 
+  ros_tensorrt_bridge
+  OpenCV
+  Python3
+  pybind11
+)
 
 install(
   TARGETS main_test

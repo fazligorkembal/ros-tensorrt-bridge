@@ -55,6 +55,8 @@ endif()
 find_package(ament_cmake REQUIRED)
 find_package(CUDAToolkit REQUIRED)
 find_package(OpenCV REQUIRED)
+find_package(Python3 COMPONENTS Interpreter Development REQUIRED)
+find_package(pybind11 REQUIRED)
 # ----------------------- Dependencies -----------------------
 add_subdirectory(yolo-tensorrt10)
 
@@ -66,6 +68,19 @@ install(DIRECTORY include/
 
 set(library_name ${PROJECT_NAME}_core)
 
+pybind11_add_module(
+  pybind_tracker
+  MODULE
+  src/tracker/tracker_bind.cpp
+)
+
+if(NOT DEFINED PYTHON_INSTALL_DIR)
+    set(PYTHON_INSTALL_DIR "${CMAKE_INSTALL_PREFIX}/lib/python${Python3_VERSION_MAJOR}.${Python3_VERSION_MINOR}/site-packages")
+endif()
+install(TARGETS pybind_tracker DESTINATION "${PYTHON_INSTALL_DIR}/${PROJECT_NAME}")
+
+add_library(tracker src/tracker/trackerlib.cpp)
+target_link_libraries(tracker PRIVATE yolo11 pybind11::embed pybind11::module ${OpenCV_LIBS})
 
 add_library(model_builder src/scratch/model_builder.cpp)
 target_link_libraries(model_builder yolo11)
@@ -80,7 +95,7 @@ target_include_directories(${library_name}
 )
 
 install(
-  TARGETS ${library_name} yolo11 model_builder myplugins
+  TARGETS ${library_name} yolo11 model_builder myplugins tracker
   EXPORT ros_tensorrt_bridge # Kütüphaneyi export et
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
