@@ -10,13 +10,13 @@ ModelBuilderScratch::~ModelBuilderScratch()
 void ModelBuilderScratch::infer(std::vector<cv::Mat> &images, std::vector<std::vector<Detection>> &res_batch)
 {
     cuda_batch_preprocess(images, device_buffers[0], kInputW, kInputH, stream);
-    
+
     context->enqueueV3(stream);
-    
-    //todo: add gpu post process here
+
+    // todo: add gpu post process here
     CUDA_CHECK(cudaMemcpyAsync(output_buffer_host, device_buffers[1], kBatchSize * kOutputSize * sizeof(float), cudaMemcpyDeviceToHost, stream));
     batch_nms(res_batch, output_buffer_host, images.size(), kOutputSize, kConfThresh, kNmsThresh);
-    //draw_bbox_keypoints_line(images, res_batch);
+    // draw_bbox_keypoints_line(images, res_batch);
 }
 
 void ModelBuilderScratch::convert()
@@ -41,17 +41,6 @@ void ModelBuilderScratch::serialize_engine(std::string &wts_name, std::string &e
         if (options_.model_type == ModelType::Yolo11n)
         {
             serialized_engine = buildEngineYolo11Pose(builder, config, DataType::kFLOAT, options_.model_path, gd, gw, max_channels, type);
-            ASSERT(serialized_engine != nullptr, "Failed to build engine");
-            std::ofstream p(engine_path, std::ios::binary);
-            if (!p)
-            {
-                ASSERT(false, "Failed to open plan output file");
-            }
-            p.write(reinterpret_cast<const char *>(serialized_engine->data()), serialized_engine->size());
-
-            delete serialized_engine;
-            delete config;
-            delete builder;
         }
         else
         {
@@ -64,7 +53,14 @@ void ModelBuilderScratch::serialize_engine(std::string &wts_name, std::string &e
         ASSERT(false, "Detection task is not supported yet");
         break;
     case TaskType::Segmentation:
-        ASSERT(false, "Segmentation task is not supported yet");
+        if (options_.model_type == ModelType::Yolo11n)
+        {
+            serialized_engine = buildEngineYolo11Seg(builder, config, DataType::kFLOAT, options_.model_path, gd, gw, max_channels, type);
+        }
+        else
+        {
+            ASSERT(false, "This model type is not supported yet, please check the model types for supported models");
+        }
         break;
     case TaskType::Classification:
         ASSERT(false, "Classification task is not supported yet");
@@ -76,6 +72,18 @@ void ModelBuilderScratch::serialize_engine(std::string &wts_name, std::string &e
     default:
         break;
     }
+
+    ASSERT(serialized_engine != nullptr, "Failed to build engine");
+    std::ofstream p(engine_path, std::ios::binary);
+    if (!p)
+    {
+        ASSERT(false, "Failed to open plan output file");
+    }
+    p.write(reinterpret_cast<const char *>(serialized_engine->data()), serialized_engine->size());
+
+    delete serialized_engine;
+    delete config;
+    delete builder;
 }
 
 void ModelBuilderScratch::deserialize_engine(std::string &engine_path)
@@ -110,25 +118,62 @@ void ModelBuilderScratch::deserialize_engine(std::string &engine_path)
     auto out_dims = engine->getTensorShape(kOutputTensorName);
     batch_size = out_dims.d[0];
 
-    prepare_buffer();
+    // prepare_buffer(options_.task_type);
 
     std::cout << "Output dimensions: " << out_dims.d[0] << ", " << out_dims.d[1] << ", " << out_dims.d[2] << ", " << out_dims.d[3] << std::endl;
     std::cout << "Engine deserialized successfully, " << engine_path << std::endl;
 }
 
-void ModelBuilderScratch::prepare_buffer()
+void ModelBuilderScratch::prepare_buffer(TaskType task_type)
 {
-    ASSERT(engine->getNbIOTensors() == 2, "Engine must have 2 IO tensors");
+    std::cout << "TASK TYPE: " << static_cast<int>(task_type) << std::endl;
+    ASSERT(task_type != TaskType::None, "Task type must be set before preparing buffer");
 
-    // Create GPU buffers on device
-    CUDA_CHECK(cudaMalloc((void **)&device_buffers[0], kBatchSize * 3 * kInputH * kInputW * sizeof(float)));
-    CUDA_CHECK(cudaMalloc((void **)&device_buffers[1], kBatchSize * kOutputSize * sizeof(float)));
+    switch (task_type)
+    {
+    case TaskType::Pose:
+        ASSERT(engine->getNbIOTensors() == 2, "Engine must have 2 IO tensors");
 
-    context->setTensorAddress(kInputTensorName, (float *)device_buffers[0]);
-    context->setTensorAddress(kOutputTensorName, (float *)device_buffers[1]);
+        // Create GPU buffers on device
+        CUDA_CHECK(cudaMalloc((void **)&device_buffers[0], kBatchSize * 3 * kInputH * kInputW * sizeof(float)));
+        CUDA_CHECK(cudaMalloc((void **)&device_buffers[1], kBatchSize * kOutputSize * sizeof(float)));
 
-    output_buffer_host = new float[kBatchSize * kOutputSize];
-    // todo: add cuda_post_process here, for now just use cpu post process
+        context->setTensorAddress(kInputTensorName, (float *)device_buffers[0]);
+        context->setTensorAddress(kOutputTensorName, (float *)device_buffers[1]);
+
+        output_buffer_host = new float[kBatchSize * kOutputSize];
+        // todo: add cuda_post_process here, for now just use cpu post process
+        break;
+    case TaskType::Detection:
+        ASSERT(false, "Detection task is not supported yet");
+        break;
+    case TaskType::Segmentation:
+        ASSERT(engine->getNbIOTensors() == 3, "Engine must have 3 IO tensors but got " << engine->getNbIOTensors());
+        
+        CUDA_CHECK(cudaMalloc((void **)&device_buffers[0], kBatchSize * 3 * kInputH * kInputW * sizeof(float)));
+        CUDA_CHECK(cudaMalloc((void **)&device_buffers[1], kBatchSize * kOutputSize * sizeof(float)));
+        CUDA_CHECK(cudaMalloc((void **)&device_buffers[2], kBatchSize * kOutputSegSize * sizeof(float)));
+
+        context->setTensorAddress(kInputTensorName, (float *)device_buffers[0]);
+        context->setTensorAddress(kOutputTensorName, (float *)device_buffers[1]);
+        context->setTensorAddress(kProtoTensorName, (float *)device_buffers[2]);
+
+        output_buffer_host = new float[kBatchSize * kOutputSize];
+        output_seg_buffer_host = new float[kBatchSize * kOutputSegSize];
+
+
+        // todo: add cuda_post_process here, for now just use cpu post process
+        break;
+    case TaskType::Classification:
+        ASSERT(false, "Classification task is not supported yet");
+        break;
+    case TaskType::Obb:
+        ASSERT(false, "Obb task is not supported yet");
+        break;
+    default:
+        ASSERT(false, "Invalid task type");
+        break;
+    }
 }
 
 void ModelBuilderScratch::parse_options(std::string &type, float &gd, float &gw, int &max_channels)

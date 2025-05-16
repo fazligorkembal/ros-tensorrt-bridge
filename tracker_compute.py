@@ -37,7 +37,7 @@ def deep_sort_compute(image, results):
         
     #print("Detection count:", count)
     
-    '''
+    
     if cv2.waitKey(1) & 0xFF == ord('q'):
         print("Exiting the program.")
         return False
@@ -46,6 +46,6 @@ def deep_sort_compute(image, results):
     cv2.waitKey(1)
     
     return True
-    '''
+    
     
     

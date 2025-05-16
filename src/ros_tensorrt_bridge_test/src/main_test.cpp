@@ -4,7 +4,23 @@
 int main(int argc, char **argv)
 {
     Tracker tracker;
+    
+    TensorRTBridgeOptions options(
+        "/home/user/Documents/ros_tensorrt_bridge/build/yolo11n-seg.wts",
+        ModelType::Yolo11n,
+        ConversionType::Scratch,
+        TaskType::Segmentation,
+        OptimizationType::FP16,
+        InputType::Image);
 
+    TensorRTBridge tensorrt_bridge(options);
+    
+    
+    
+    
+    
+    
+    /*
     TensorRTBridgeOptions options(
         "/home/user/Documents/ros_tensorrt_bridge/build/yolo11n-pose.wts",
         ModelType::Yolo11n,
@@ -40,7 +56,7 @@ int main(int argc, char **argv)
     std::cout << "FPS: " << 15000.0 / (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - start_time).count() / 1000.0)
               << std::endl;
 
-            
+    */      
 
     /*
     cv::VideoCapture cap(0);

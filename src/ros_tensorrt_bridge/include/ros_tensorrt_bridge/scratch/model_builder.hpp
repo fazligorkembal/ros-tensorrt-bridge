@@ -19,7 +19,7 @@ public:
                    options_.model_path.ends_with(".plan"),
                "Model path must be a .wts, .engine or .plan file for scratch conversion");
         // todo: Add other task types
-        ASSERT(options_.task_type == TaskType::Pose, "Task is not supported for scratch conversion yet, only pose is supported currently");
+        ASSERT(options_.task_type == TaskType::Pose || options_.task_type == TaskType::Segmentation, "Task is not supported for scratch conversion yet, only pose or segmentation are supported currently");
         // todo: Add other optimization types
         ASSERT(options_.optimization_type == OptimizationType::FP16, "Optimization is not supported for scratch conversion yet, only FP16 is supported currently");
         // todo: Add other input types
@@ -56,7 +56,7 @@ public:
         }
 
         deserialize_engine(engine_path);
-        prepare_buffer();
+        prepare_buffer(options_.task_type);
     }
 
     ~ModelBuilderScratch() override;
@@ -69,10 +69,11 @@ private:
     void serialize_engine(std::string &wts_name, std::string &engine_path, std::string &type, float &gd, float &gw, int &max_channels);
     void deserialize_engine(std::string &engine_path);
     void parse_options(std::string &type, float &gd, float &gw, int &max_channels);
-    void prepare_buffer();
+    void prepare_buffer(TaskType task_type);
 
     Logger gLogger;
     const int kOutputSize = kMaxNumOutputBbox * sizeof(Detection) / sizeof(float) + 1;
+    const int kOutputSegSize = 32 * (kInputH / 4) * (kInputW / 4);
 
     IRuntime *runtime = nullptr;
     ICudaEngine *engine = nullptr;
@@ -80,8 +81,9 @@ private:
     cudaStream_t stream;
 
     int batch_size = 0;
-    float *device_buffers[2];
+    float *device_buffers[3];
     float *output_buffer_host = nullptr;
+    float *output_seg_buffer_host = nullptr;
     float *decode_ptr_host = nullptr;
     float *decode_ptr_device = nullptr;
 };
