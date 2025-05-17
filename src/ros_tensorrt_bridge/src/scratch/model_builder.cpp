@@ -19,6 +19,77 @@ void ModelBuilderScratch::infer(std::vector<cv::Mat> &images, std::vector<std::v
     // draw_bbox_keypoints_line(images, res_batch);
 }
 
+void ModelBuilderScratch::infer(std::vector<cv::Mat> &images, std::vector<std::vector<Detection>> &res_batch, std::vector<cv::Mat> &masks)
+{
+    cuda_batch_preprocess(images, device_buffers[0], kInputW, kInputH, stream);
+
+    context->enqueueV3(stream);
+
+    // todo: add gpu post process here
+    CUDA_CHECK(cudaMemcpyAsync(output_buffer_host, device_buffers[1], kBatchSize * kOutputSize * sizeof(float), cudaMemcpyDeviceToHost, stream));
+    CUDA_CHECK(cudaMemcpyAsync(output_seg_buffer_host, device_buffers[2], kBatchSize * kOutputSegSize * sizeof(float), cudaMemcpyDeviceToHost, stream));
+
+    // todo: add gpu post process here
+    batch_nms(res_batch, output_buffer_host, images.size(), kOutputSize, kConfThresh, kNmsThresh);
+    for(size_t i = 0; i < images.size(); i++)
+    {
+        auto &det = res_batch[i];
+        cv::Mat img = images[i];
+        auto masks_temp = process_mask(&output_seg_buffer_host[i * kOutputSegSize], kOutputSegSize, det);
+        draw_mask_bbox(img, det, masks_temp, labels_map);
+    }
+
+}
+
+static cv::Rect get_downscale_rect(float bbox[4], float scale)
+{
+
+    float left = bbox[0];
+    float top = bbox[1];
+    float right = bbox[0] + bbox[2];
+    float bottom = bbox[1] + bbox[3];
+
+    left = left < 0 ? 0 : left;
+    top = top < 0 ? 0 : top;
+    right = right > kInputW ? kInputW : right;
+    bottom = bottom > kInputH ? kInputH : bottom;
+
+    left /= scale;
+    top /= scale;
+    right /= scale;
+    bottom /= scale;
+    return cv::Rect(int(left), int(top), int(right - left), int(bottom - top));
+}
+
+std::vector<cv::Mat> ModelBuilderScratch::process_mask(const float *proto, int proto_size, std::vector<Detection> &dets)
+{
+
+    std::vector<cv::Mat> masks;
+    for (size_t i = 0; i < dets.size(); i++)
+    {
+
+        cv::Mat mask_mat = cv::Mat::zeros(kInputH / 4, kInputW / 4, CV_32FC1);
+        auto r = get_downscale_rect(dets[i].bbox, 4);
+
+        for (int x = r.x; x < r.x + r.width; x++)
+        {
+            for (int y = r.y; y < r.y + r.height; y++)
+            {
+                float e = 0.0f;
+                for (int j = 0; j < 32; j++)
+                {
+                    e += dets[i].mask[j] * proto[j * proto_size / 32 + y * mask_mat.cols + x];
+                }
+                e = 1.0f / (1.0f + expf(-e));
+                mask_mat.at<float>(y, x) = e;
+            }
+        }
+        cv::resize(mask_mat, mask_mat, cv::Size(kInputW, kInputH));
+        masks.push_back(mask_mat);
+    }
+    return masks;
+}
+
 void ModelBuilderScratch::convert()
 {
     std::cout << "ModelBuilderScratch convert called" << std::endl;
@@ -149,7 +220,7 @@ void ModelBuilderScratch::prepare_buffer(TaskType task_type)
         break;
     case TaskType::Segmentation:
         ASSERT(engine->getNbIOTensors() == 3, "Engine must have 3 IO tensors but got " << engine->getNbIOTensors());
-        
+
         CUDA_CHECK(cudaMalloc((void **)&device_buffers[0], kBatchSize * 3 * kInputH * kInputW * sizeof(float)));
         CUDA_CHECK(cudaMalloc((void **)&device_buffers[1], kBatchSize * kOutputSize * sizeof(float)));
         CUDA_CHECK(cudaMalloc((void **)&device_buffers[2], kBatchSize * kOutputSegSize * sizeof(float)));
@@ -161,6 +232,9 @@ void ModelBuilderScratch::prepare_buffer(TaskType task_type)
         output_buffer_host = new float[kBatchSize * kOutputSize];
         output_seg_buffer_host = new float[kBatchSize * kOutputSegSize];
 
+        //todo: change this with dynamic label txt 
+        read_labels("/home/user/Documents/ros_tensorrt_bridge/build/coco.txt", labels_map);
+        ASSERT(kNumClass == labels_map.size(), "Number of classes must be equal to labels map size");
 
         // todo: add cuda_post_process here, for now just use cpu post process
         break;

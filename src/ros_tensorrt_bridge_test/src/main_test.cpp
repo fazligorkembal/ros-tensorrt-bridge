@@ -15,11 +15,27 @@ int main(int argc, char **argv)
 
     TensorRTBridge tensorrt_bridge(options);
     
+    cv::Mat image = cv::imread("/home/user/Documents/ros_tensorrt_bridge/src/ros_tensorrt_bridge/yolo-tensorrt10/input_samples/test_input2.jpg");
+    if (image.empty())
+    {
+        std::cerr << "Failed to load image" << std::endl;
+        return -1;
+    }
+
+    auto start_time = std::chrono::high_resolution_clock::now();
+    std::vector<cv::Mat> images;
+    std::vector<cv::Mat> masks;
+    std::vector<std::vector<Detection>> res_batch;
+    images.push_back(image);
     
-    
-    
-    
-    
+    tensorrt_bridge.infer(images, res_batch, masks);
+
+    for(size_t i = 0; i < images.size(); i++)
+    {
+        cv::imwrite("/home/user/Documents/ros_tensorrt_bridge/build/" + std::to_string(i) + ".jpg", images[i]);
+        
+    }
+
     /*
     TensorRTBridgeOptions options(
         "/home/user/Documents/ros_tensorrt_bridge/build/yolo11n-pose.wts",

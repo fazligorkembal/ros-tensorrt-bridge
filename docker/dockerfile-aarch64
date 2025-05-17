@@ -29,7 +29,7 @@ RUN cmake -D CMAKE_BUILD_TYPE=RELEASE \
 RUN make -j$(nproc) && make install
 
 RUN apt-get update && apt-get upgrade -y
-RUN pip3 install torch torchvision ultralytics --upgrade --force-reinstall
+RUN pip3 install torch torchvision ultralytics supervision trackers --upgrade --force-reinstall
 #RUN pip3 install ultralytics onnxslim onnxruntime-gpu onnxruntime-gpu matplotlib tqdm requests psutil cmake
 RUN pip3 install tqdm requests psutil cmake
 RUN pip3 install "numpy<2"

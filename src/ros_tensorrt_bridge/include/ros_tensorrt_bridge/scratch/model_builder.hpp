@@ -62,6 +62,7 @@ public:
     ~ModelBuilderScratch() override;
 
     void infer(std::vector<cv::Mat> &images, std::vector<std::vector<Detection>> &res_batch) override;
+    void infer(std::vector<cv::Mat> &images, std::vector<std::vector<Detection>> &res_batch, std::vector<cv::Mat> &masks) override;
     void convert() override;
     void build() override;
 
@@ -70,6 +71,7 @@ private:
     void deserialize_engine(std::string &engine_path);
     void parse_options(std::string &type, float &gd, float &gw, int &max_channels);
     void prepare_buffer(TaskType task_type);
+    std::vector<cv::Mat> process_mask(const float *proto, int proto_size, std::vector<Detection> &dets);
 
     Logger gLogger;
     const int kOutputSize = kMaxNumOutputBbox * sizeof(Detection) / sizeof(float) + 1;
@@ -86,4 +88,5 @@ private:
     float *output_seg_buffer_host = nullptr;
     float *decode_ptr_host = nullptr;
     float *decode_ptr_device = nullptr;
+    std::unordered_map<int, std::string> labels_map;
 };
